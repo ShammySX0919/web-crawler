@@ -48,7 +48,6 @@ public class Crawler {
 		domain = UrlBuilder.fromUri(initialUri).withPath("").withQuery("").withFragment("").toUri();
 
 		// this.mainThread = Thread.currentThread;
-
 		enqueue(initialUri);
 
 		while (!queue.isEmpty() || !currentlyBeingExplored.isEmpty()) {
@@ -136,7 +135,7 @@ public class Crawler {
 		HttpRequest request;
 
 		try {
-			request = HttpRequest.get(uri.toURL()).connectTimeout(10000);
+			request = HttpRequest.get(uri.toURL()).connectTimeout(1000);
 		} catch (Exception e) {
 			node.setPageNodeStatus(WebsiteGraph.PageNodeStatus.FAILURE);
 			node.setError(e.toString());
@@ -153,17 +152,6 @@ public class Crawler {
 		} else {
 			if (request.header("Content-Type").startsWith("text")) {
 				for (URI neighborUri : HtmlHelper.getNeighbors(request.body(), uri, errors)) {
-					String curUri = neighborUri.toString();
-					int i = curUri.indexOf('#');
-					if (-1 != i) {
-						String newUri = curUri.substring(0, i);
-						try {
-							neighborUri = new URI(newUri);
-						} catch (URISyntaxException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
 					graph.addNeighbor(uri, neighborUri);
 					System.out.println("adding " + neighborUri + " from " + uri);
 					enqueue(neighborUri);
@@ -182,24 +170,25 @@ public class Crawler {
 		node.setRequestType(RequestType.HEAD);
 
 		try {
-			HttpRequest request = HttpRequest.head(uri.toURL()).connectTimeout(10000);
-
+			HttpRequest request = HttpRequest.head(uri.toURL()).connectTimeout(1000);
 			node.setResponseCode(request.code());
+
+			node.setPageNodeStatus(WebsiteGraph.PageNodeStatus.SUCCESS);
+
+			if (node.responseCode >= 400) {
+				noteError("When crawling " + uri + " got a " + node.responseCode + " (linked from "
+						+ graph.parents(node.url) + ")");
+			}
 		} catch (Exception e) {
 			node.setPageNodeStatus(WebsiteGraph.PageNodeStatus.FAILURE);
 			node.setError(e.toString());
-            System.out.println("Error! While crawling " + uri.toString() + ", got " + e.toString());
+			System.out.println("Error! While crawling " + uri.toString() + ", got " + e.toString());
+			// failed test 3 here - decrease thread count
+			// refactored and added finally block
 			return;
+		} finally {
+			finalizeCrawl(uri);
 		}
-
-		node.setPageNodeStatus(WebsiteGraph.PageNodeStatus.SUCCESS);
-
-		if (node.responseCode >= 400) {
-			noteError("When crawling " + uri + " got a " + node.responseCode + " (linked from "
-					+ graph.parents(node.url) + ")");
-		}
-
-		finalizeCrawl(uri);
 	}
 
 	private boolean uriShouldBeCrawledAsNode(URI uri) {
@@ -208,10 +197,18 @@ public class Crawler {
 		}
 
 		// prevent you from starting to crawl FTP if you're looking at HTTP
-		if (!domain.getScheme().equals(uri.getScheme())) {
+		// failed test 4 here: http vs https
+		// if (!domain.getScheme().equals(uri.getScheme())) {
+		// return false;
+		// }
+		if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
 			return false;
 		}
 
+		// failed test 1 here
+		// List<String> filetypeList = Arrays.asList("pdf", "jpg", "gif", "js", "css",
+		// "png");
+		// fixes
 		List<String> filetypeList = Arrays.asList("pdf", "jpg", "gif", "js", "css", "png", "svg");
 
 		int i = uri.getPath().lastIndexOf('.');

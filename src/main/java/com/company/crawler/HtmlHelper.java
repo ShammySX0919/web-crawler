@@ -1,23 +1,20 @@
 package com.company.crawler;
 
-import com.company.lib.urlbuilder.UrlBuilder;
-
-import java.lang.reflect.Array;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.net.*;
-import java.io.*;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.company.lib.urlbuilder.UrlBuilder;
 
 public class HtmlHelper {
 	public static String cleanUpHref(String href) {
 		return href.replace(" ", "%20");
 	}
 
-    public static String absolutizePath(String path, String basePath) {
+	public static String absolutizePath(String path, String basePath) {
 		if (path.length() == 0) {
 			return path;
 		}
@@ -51,7 +48,7 @@ public class HtmlHelper {
 		return getUrlsFromPage(pathsToFollow, uri, errors);
 	}
 
-    static ArrayList<URI> getUrlsFromPage(ArrayList<String> pathsToFollow, URI parentUri, List<String> errors) {
+	static ArrayList<URI> getUrlsFromPage(ArrayList<String> pathsToFollow, URI parentUri, List<String> errors) {
 
 		ArrayList<URI> out = new ArrayList<URI>();
 
@@ -59,6 +56,11 @@ public class HtmlHelper {
 			href = cleanUpHref(href);
 			URI hrefUri;
 			try {
+				// fixes
+				int i = href.indexOf('#');
+				if (-1 != i)
+					href = href.substring(0, i);
+				// failed test 2 here
 				hrefUri = new URI(href);
 			} catch (java.net.URISyntaxException e) {
 				errors.add("There was an invalid url in " + parentUri.toString() + ": " + href);
@@ -114,18 +116,16 @@ public class HtmlHelper {
 		return out;
 	}
 
-    static private String join(List<String> list, String conjunction)
-    {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (String item : list)
-        {
-            if (first)
-                first = false;
-            else
-                sb.append(conjunction);
-            sb.append(item);
-        }
-        return sb.toString();
-    }
+	static private String join(List<String> list, String conjunction) {
+		StringBuilder sb = new StringBuilder();
+		boolean first = true;
+		for (String item : list) {
+			if (first)
+				first = false;
+			else
+				sb.append(conjunction);
+			sb.append(item);
+		}
+		return sb.toString();
+	}
 }

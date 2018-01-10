@@ -46,17 +46,17 @@ public class WebsiteGraph {
 	private HashMap<URI, ArrayList<PageNode>> outgoingLinks = new HashMap<URI, ArrayList<PageNode>>();
 	private HashMap<URI, ArrayList<PageNode>> incomingLinks = new HashMap<URI, ArrayList<PageNode>>();
 
-	void addNode(URI url) {
-		if (!nodes.containsKey(url)) {
-			nodes.put(url, new PageNode(url));
+	void addNode(URI uri) {
+		if (!nodes.containsKey(uri)) {
+			nodes.put(uri, new PageNode(uri));
 		}
 	}
 
-	public PageNode get(URI url) {
-		PageNode node = nodes.get(url);
+	public PageNode get(URI uri) {
+		PageNode node = nodes.get(uri);
 		if (node == null) {
-			addNode(url);
-			return nodes.get(url);
+			addNode(uri);
+			return nodes.get(uri);
 		} else {
 			return node;
 		}
