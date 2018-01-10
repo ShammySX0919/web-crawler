@@ -198,9 +198,10 @@ public class Crawler {
 
 		// prevent you from starting to crawl FTP if you're looking at HTTP
 		// failed test 4 here: http vs https
-		// if (!domain.getScheme().equals(uri.getScheme())) {
-		// return false;
-		// }
+		//crawling with HEAD request: https://triplebyte.github.io/web-crawler-test-site/test4/cynical.html
+//		 if (!domain.getScheme().equals(uri.getScheme())) {
+//		 return false;
+//		 }
 		if (!"http".equalsIgnoreCase(uri.getScheme()) && !"https".equalsIgnoreCase(uri.getScheme())) {
 			return false;
 		}
